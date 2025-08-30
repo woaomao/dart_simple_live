@@ -1,0 +1,60 @@
+name: Build Windows (Simple Live)
+
+on:
+  workflow_dispatch:        # 手动点按钮触发
+  push:
+    paths:
+      - "simple_live_app/**"
+      - ".github/workflows/build-windows.yml"
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 安装指定版本 Flutter（仓库 README 要求 3.22）
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: "3.22.0"
+          cache: true
+
+      - name: Enable Windows Desktop
+        run: flutter config --enable-windows-desktop
+
+      - name: Fetch pub dependencies
+        working-directory: simple_live_app
+        run: flutter pub get
+
+      # （可选但强烈推荐）预下载 mpv 压缩包，降低 media_kit 校验失败概率
+      - name: Pre-download mpv archive (retry)
+        working-directory: simple_live_app
+        run: |
+          $out="build/windows/x64/mpv-dev-x86_64-20230924-git-652a1dd.7z"
+          if (!(Test-Path $out)) {
+            New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
+            $uri="https://github.com/media-kit/libmpv-win64/releases/download/20230924/mpv-dev-x86_64-20230924-git-652a1dd.7z"
+            for ($i=0; $i -lt 3; $i++) {
+              try {
+                Invoke-WebRequest -Uri $uri -OutFile $out -UseBasicParsing
+                if ((Get-Item $out).Length -gt 0) { break }
+              } catch { Start-Sleep -Seconds 3 }
+            }
+          }
+
+      - name: Build Windows Release
+        working-directory: simple_live_app
+        run: flutter build windows --release
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: simple_live_app-windows
+          path: simple_live_app/build/windows/x64/runner/Release/
