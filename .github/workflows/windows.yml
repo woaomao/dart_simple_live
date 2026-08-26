@@ -11,8 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          ref: master   # 确保拉取 main 分支
+          fetch-depth: 0   # 拉取完整历史，默认分支
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -21,15 +20,18 @@ jobs:
 
       - name: Enable Windows
         run: flutter config --enable-windows-desktop
+        working-directory: dart_simple_live   # ✅ 指定项目目录
 
       - name: Get packages
         run: flutter pub get
+        working-directory: dart_simple_live   # ✅ 指定项目目录
 
       - name: Build Windows
         run: flutter build windows --release
+        working-directory: dart_simple_live   # ✅ 指定项目目录
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4   # ✅ 升级到 v4
+        uses: actions/upload-artifact@v4   # ✅ 使用 v4
         with:
           name: windows-release
-          path: build/windows/runner/Release/
+          path: dart_simple_live/build/windows/runner/Release/   # ✅ 路径加上项目目录
