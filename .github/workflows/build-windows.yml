@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest # 编译Windows必须使用Windows环境运行器
+    runs-on: windows-2022 # 编译Windows必须使用Windows环境运行器
     steps:
       - name: 检出项目代码
         uses: actions/checkout@v4
