@@ -1,11 +1,11 @@
 name: Build Windows
 
 on:
-  workflow_dispatch:   # 手动触发构建
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest   # 使用 GitHub 提供的 Windows Runner
+    runs-on: windows-latest
 
     steps:
       - name: Checkout
@@ -22,13 +22,13 @@ jobs:
         run: flutter config --enable-windows-desktop
 
       - name: Get packages
-        run: flutter pub get
+        run: flutter pub get   # ✅ 不要写 working-directory
 
       - name: Build Windows
-        run: flutter build windows --release
+        run: flutter build windows --release   # ✅ 不要写 working-directory
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4   # ✅ 用 v4
+        uses: actions/upload-artifact@v4
         with:
           name: windows-release
           path: build/windows/runner/Release/
