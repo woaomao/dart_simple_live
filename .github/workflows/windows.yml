@@ -20,18 +20,15 @@ jobs:
 
       - name: Enable Windows
         run: flutter config --enable-windows-desktop
-        working-directory: dart_simple_live   # ✅ 指定项目目录
 
       - name: Get packages
         run: flutter pub get
-        working-directory: dart_simple_live   # ✅ 指定项目目录
 
       - name: Build Windows
         run: flutter build windows --release
-        working-directory: dart_simple_live   # ✅ 指定项目目录
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4   # ✅ 使用 v4
+        uses: actions/upload-artifact@v4   # ✅ 用 v4
         with:
           name: windows-release
-          path: dart_simple_live/build/windows/runner/Release/   # ✅ 路径加上项目目录
+          path: build/windows/runner/Release/
