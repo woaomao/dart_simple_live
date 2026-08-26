@@ -1,0 +1,44 @@
+name: Build Windows Only
+
+# 触发条件：支持手动触发 + 推送main分支自动触发
+on:
+  workflow_dispatch: # 允许在Actions页面手动点击运行
+  push:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest # 编译Windows必须使用Windows环境运行器
+    steps:
+      - name: 检出项目代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Flutter 环境
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.x' # 与项目要求版本一致
+          channel: 'stable'
+
+      - name: 启用 Windows 桌面构建支持
+        run: flutter config --enable-windows-desktop
+
+      - name: 安装项目依赖
+        run: |
+          cd simple_live_app
+          flutter clean
+          flutter pub get
+
+      - name: 编译 Windows 发布版
+        run: |
+          cd simple_live_app
+          flutter build windows --release
+
+      - name: 打包编译产物为ZIP
+        run: |
+          Compress-Archive -Path simple_live_app/build/windows/x64/runner/Release/* -DestinationPath SimpleLive-Windows-x64.zip
+
+      - name: 上传构建产物（运行后可下载）
+        uses: actions/upload-artifact@v4
+        with:
+          name: SimpleLive-Windows-Build
+          path: SimpleLive-Windows-x64.zip
