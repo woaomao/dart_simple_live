@@ -1,22 +1,25 @@
 name: Build Windows Only
 
-# 触发条件：支持手动触发 + 推送main分支自动触发
 on:
-  workflow_dispatch: # 允许在Actions页面手动点击运行
+  workflow_dispatch: # 手动触发
   push:
     branches: [ main ]
+    tags:
+      - 'v*'  # 匹配v开头的标签，如 v1.0.0、v2.1.0
 
 jobs:
   build-windows:
-    runs-on: windows-2022 # 编译Windows必须使用Windows环境运行器
+    runs-on: windows-2022
+    permissions:
+      contents: write  # 必须开启，允许创建和写入 Release
     steps:
       - name: 检出项目代码
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: 安装 Flutter 环境
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.38.x' # 与项目要求版本一致
+          flutter-version: '3.38.x'
           channel: 'stable'
 
       - name: 启用 Windows 桌面构建支持
@@ -37,8 +40,16 @@ jobs:
         run: |
           Compress-Archive -Path simple_live_app/build/windows/x64/runner/Release/* -DestinationPath SimpleLive-Windows-x64.zip
 
-      - name: 上传构建产物（运行后可下载）
+      - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
           name: SimpleLive-Windows-Build
           path: SimpleLive-Windows-x64.zip
+
+      - name: 发布到 GitHub Release
+        if: github.ref_type == 'tag'  # 仅打标签时才发布，普通提交不发布
+        uses: softprops/action-gh-release@v3
+        with:
+          files: SimpleLive-Windows-x64.zip
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true  # 自动生成更新日志
